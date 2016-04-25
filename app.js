@@ -10,40 +10,35 @@ var DEFAULT_LANG = 'en';
 app.use(cookieParser());
 
 app.use(function (req, res, next) {
-    var acceptLang = acceptLanguage.get(req.get('Accept-Language')),
+    var acceptLang = acceptLanguage.get(req.get('Accept-Language') || 'en'),
         lang = req.cookies['lang'] || acceptLang.slice(0, 2) || DEFAULT_LANG,
-        isEnglish = ~req.url.indexOf('en'),
-        isRussian = ~req.url.indexOf('ru');
+        isEnglish = req.url.startsWith('/en'),
+        isRussian = req.url.startsWith('/ru');
 
-    if (!isEnglish && !isRussian) {
-        req.url = '/' + lang + req.url;
+    if (isEnglish || isRussian) {
+        lang = isRussian ? 'ru' : 'en';
         res.cookie('lang', lang);
+    } else {
+        req.url = '/' + lang + req.url;
+        if (req.url.endsWith('/')) {
+            res.cookie('lang', lang);
+        }
     }
 
     next();
 });
 
-app.use('/en', [
-    function (req, res, next) {
-        res.cookie('lang', 'en');
-        next();
-    }, proxy('0.0.0.0:3000', {
-        forwardPath: function (req, res) {
-            return url.parse(req.url).path;
-        }
-    })
-]);
+app.use('/en', proxy('0.0.0.0:3000', {
+    forwardPath: function (req, res) {
+        return url.parse(req.url).path;
+    }
+}));
 
-app.use('/ru', [
-    function (req, res, next) {
-        res.cookie('lang', 'ru');
-        next();
-    }, proxy('0.0.0.0:3001', {
-        forwardPath: function (req, res) {
-            return url.parse(req.url).path;
-        }
-    })
-]);
+app.use('/ru', proxy('0.0.0.0:3001', {
+    forwardPath: function (req, res) {
+        return url.parse(req.url).path;
+    }
+}));
 
 //app.use(express.static(__dirname + '/../soshace-landing-keystone/dist'));
 
