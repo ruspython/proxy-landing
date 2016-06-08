@@ -7,22 +7,19 @@ var cookieParser = require('cookie-parser');
 var app = express();
 var DEFAULT_LANG = 'en';
 
+var currentLang = DEFAULT_LANG;
+
 app.use(cookieParser());
 
 app.use(function (req, res, next) {
     var acceptLang = acceptLanguage.get(req.get('Accept-Language') || 'en'),
         lang = req.cookies['lang'] || acceptLang.slice(0, 2) || DEFAULT_LANG,
         isEnglish = req.url.startsWith('/en'),
-        isRussian = req.url.startsWith('/ru');
+        isRussian = req.url.startsWith('/ru') || (lang.search('ru'));
 
-    if (isEnglish || isRussian) {
-        lang = isRussian ? 'ru' : 'en';
-        res.cookie('lang', lang);
-    } else {
-        if (req.url.endsWith('/')) {
-            res.cookie('lang', lang);
-        }
-    }
+    lang = isRussian ? 'ru' : 'en';
+    res.cookie('lang', lang);
+    currentLang = lang;
 
     next();
 });
@@ -40,8 +37,9 @@ app.use('/ru', proxy('0.0.0.0:3001', {
 }));
 
 app.use('/', function(req, res) {
-    var langUrl = '/' + req.cookies.lang + req.url;
-    res.redirect(langUrl);
+    var langUrl = '/' + currentLang + req.url;
+    req.url = langUrl;
+    res.status(303).redirect(langUrl);
 });
 
 app.listen(7000, function () {
