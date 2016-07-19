@@ -31,13 +31,15 @@ app.use(function (req, res, next) {
 app.use('/en', proxy('0.0.0.0:3000', {
     forwardPath: function (req, res) {
         return url.parse(req.url).path;
-    }
+    },
+    limit: '10mb'
 }));
 
 app.use('/ru', proxy('0.0.0.0:3001', {
     forwardPath: function (req, res) {
         return url.parse(req.url).path;
-    }
+    },
+    limit: '10mb'
 }));
 
 //app.use(express.static(__dirname + '/../soshace-landing-keystone/dist'));
