@@ -16,9 +16,11 @@ app.use(function (req, res, next) {
         lang = req.cookies['locale'] || acceptLang.slice(0, 2) || DEFAULT_LANG,
         isEnglish = req.url.startsWith('/en'),
         isRussian = req.url.startsWith('/ru') || (lang.search('ru'));
+
     if (!lang) {
       lang = isRussian ? 'ru' : 'en';
     }
+
     res.cookie('locale', lang);
     currentLang = lang;
     console.log("lang: %s", currentLang);
